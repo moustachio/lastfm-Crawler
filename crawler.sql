@@ -12,7 +12,7 @@ CREATE TABLE `lastfm_annotations` (`user_id` bigint(20) NOT NULL,`item_url` varc
 DROP TABLE IF EXISTS `lastfm_errorqueue`;
 CREATE TABLE `lastfm_errorqueue` (`user_id` bigint(20) DEFAULT NULL,`error_type` varchar(11) DEFAULT NULL,`tag_name` varchar(2000) DEFAULT NULL,`retry_count` int(11) DEFAULT NULL, index user_id (user_id), index error_type (error_type), index retry_count (retry_count)) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 # future versions should rename the "retry_count" column, as it is not being used as such anymore
-# we should also change tag_name to something more generic like "desc", as it's used for morethan just tag names (i.e scrobble timestamps)
+# we should also change tag_name to something more generic like "desc", as it is used for more than just tag names (i.e scrobble timestamps)
 
 DROP TABLE IF EXISTS `lastfm_friendlist`;
 CREATE TABLE `lastfm_friendlist` (`friend_id1` bigint(20) NOT NULL,`friend_id2` bigint(20) NOT NULL,`sanity_check_id` varchar(767) NOT NULL,PRIMARY KEY (`sanity_check_id`), index friend_id1 (friend_id1), index friend_id2 (friend_id2)) ENGINE=InnoDB DEFAULT CHARSET=latin1;

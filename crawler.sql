@@ -27,6 +27,7 @@ CREATE TABLE `lastfm_crawlqueue` (
 	`time_stamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`friends_fixed` INT(1) NOT NULL DEFAULT '1',
 	`loved_tracks` INT(1) NULL DEFAULT '0',
+	`banned_tracks` INT(1) NULL DEFAULT '0',
 	INDEX `friends_fixed` (`friends_fixed`),
 	INDEX `loved_tracks` (`loved_tracks`)
 	PRIMARY KEY (`user_name`),
@@ -74,6 +75,18 @@ CREATE TABLE `lastfm_lovedtracks` (
 	INDEX `item_url` (`item_url`),
 	INDEX `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `lastfm_bannedtracks`;
+CREATE TABLE `lastfm_bannedtracks` (
+	`user_id` INT(10) NULL,
+	`item_url` VARCHAR(767) NULL,
+	`ban_time` TIMESTAMP NULL,
+	UNIQUE INDEX `user_id_item_url` (`user_id`, `item_url`),
+	INDEX `user_id` (`user_id`),
+	INDEX `item_url` (`item_url`)
+)
+COLLATE='latin1_general_ci'
+ENGINE=InnoDB;
 
 
 

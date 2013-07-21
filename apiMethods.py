@@ -275,7 +275,7 @@ def getLovedTracks(username,uid):
 	
 	try:
 		# use getLovedTracks API method, with 50 entries per page (this gets the first page)
-		url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user='+username.replace(' ','%20')+'&api_key='+api
+		url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user='+username.replace(' ','%20')+'&limit=1000&api_key='+api
 		tree = etree.fromstring(ul.urlopen(url).read(),parser=parser)
 		totalPages = int(tree[0].get('totalPages'))
 		if totalPages>0:
@@ -283,7 +283,7 @@ def getLovedTracks(username,uid):
 				
 				# after the first page, specify which page we're on
 				if page > 1:
-					url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user='+username.replace(' ','%20')+'&page='+str(page)+'&api_key='+api
+					url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user='+username.replace(' ','%20')+'&page='+str(page)+'&limit=1000&api_key='+api
 					tree = etree.fromstring(ul.urlopen(url).read(),parser=parser)
 				
 				# For each scrobble, get the unixtime (uts), convert to MySQL format, and write to database
@@ -308,6 +308,44 @@ def getLovedTracks(username,uid):
 		except KeyboardInterrupt:
 			raise
 
+#Record timestamped list of a user's *banned* tracks
+def getBannedTracks(username,uid):
+	errorType = 'banned'
+	
+	try:
+		# use getLovedTracks API method, with 50 entries per page (this gets the first page)
+		url = 'http://ws.audioscrobbler.com/2.0/?method=user.getbannedtracks&user='+username.replace(' ','%20')+'&limit=1000&api_key='+api
+		tree = etree.fromstring(ul.urlopen(url).read(),parser=parser)
+		totalPages = int(tree[0].get('totalPages'))
+		if totalPages>0:
+			for page in [p+1 for p in range(totalPages)]:
+				
+				# after the first page, specify which page we're on
+				if page > 1:
+					url = 'http://ws.audioscrobbler.com/2.0/?method=user.getbannedtracks&user='+username.replace(' ','%20')+'&page='+str(page)+'&limit=1000&api_key='+api
+					tree = etree.fromstring(ul.urlopen(url).read(),parser=parser)
+				
+				# For each scrobble, get the unixtime (uts), convert to MySQL format, and write to database
+				cursor = db.cursor()
+				for track in tree[0]:
+					trackURL = track.findtext('url')[25:]
+					timestamp = int(track.find('date').get('uts'))
+					timestamp = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(timestamp))
+					cursor.execute("INSERT IGNORE INTO lastfm_bannedtracks (user_id, item_url, ban_time) VALUES (%s,%s,%s)", (uid,trackURL,timestamp))
+				closeDBConnection(cursor)
+		
+	except KeyboardInterrupt:
+		raise
+	
+	# catch any other errors
+	except:
+		try:
+			print traceback.format_exc()
+			cursor = db.cursor()
+			cursor.callproc("UpdateErrorQueue", (uid,errorType,'','@retryCount'))
+			closeDBConnection(cursor)
+		except KeyboardInterrupt:
+			raise
 
 # gets total playcount (as reocorded in "getRecentTracks" API call, not as listed on profile)
 def getTotalPlaycount(username):

@@ -124,6 +124,8 @@ while True:
 					apiMethods.getUserScrobbles(username,uid)
 			elif error_type == 'loved':
 				apiMethods.getLovedTracks(username,uid)
+			elif error_type == 'banned':
+				apiMethods.getbannedTracks(username,uid)
 		
 		# if the queue is empty, wait for ten seconds before checking again
 		else:

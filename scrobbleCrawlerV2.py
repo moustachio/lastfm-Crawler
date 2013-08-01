@@ -2,6 +2,8 @@
 Functions for extracting listening information from last.fm api. Designed to enforce that we crawl roughly the same number of users from each of our 4 defined tagging levels.
 
 UPDATED VERSION DOES NOT COLLECT EXTENDED INFO, AND SHOULD GO ON INDEFINITELY
+
+NOW FLAGGING ALL USERS WITH TAGGING LEVEL = 0 WITH CRAWL_FLAG=5
 """
 
 import apiMethods
@@ -27,7 +29,7 @@ def taggerLevel(annoCount):
 # What level of tagger should we crawl next?
 def nextLevel(last):
     if last == 3:
-        return 0
+        return 1
     else:
         return last + 1
 
@@ -48,7 +50,7 @@ def cleanup(username):
 	print 'Done!'
     
 # Just start randomly now
-next = random.randint(0,3)
+next = random.randint(1,3)
 
 # Get total number of people left to crawl
 cursor = db.cursor()
@@ -90,7 +92,7 @@ while crawlFlag and total >= 0:
 			
 			if uid:
 				uid = uid[0]	
-				print username, uid
+				print username, uid, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 				
 				
 				# Get user's annotation count and write to extended_user_info_table
@@ -101,7 +103,13 @@ while crawlFlag and total >= 0:
 				# calculate tagger level, and get scrobbles if it's the next level we want to crawl
 				level = taggerLevel(annoCount)
 				print level
-				if level==next:
+
+				if level == 0:
+					cursor=db.cursor()
+					cursor.execute("UPDATE lastfm_crawlqueue set crawl_flag=5 where user_name=%s;",(username))
+					closeDBConnection(cursor)
+
+				else:
 					
 					print 'Collecting scrobbles...'
 					next = nextLevel(next) # increment value for next tagger level

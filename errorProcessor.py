@@ -81,7 +81,7 @@ while True:
 			# get descriptors for the error
 			error_type = result[1]
 			desc = result[2]
-			print username, uid, error_type, desc
+			print username, uid, error_type, desc, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 			
 			# If spaces in the username caused the problem, replace them with '%20's
 			if ' ' in username:

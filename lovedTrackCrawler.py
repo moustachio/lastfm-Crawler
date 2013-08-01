@@ -38,7 +38,7 @@ while flag:
 		cursor=db.cursor()
 		cursor.execute("update lastfm_crawlqueue set loved_tracks=1 where user_name=%s",(username))
 		closeDBConnection(cursor)
-		print username, uid
+		print username, uid, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		apiMethods.getLovedTracks(username,uid)	
 	else:
 		time.sleep(30)

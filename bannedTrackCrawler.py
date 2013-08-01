@@ -12,6 +12,7 @@ import sys
 import time
 import dbMethods
 import traceback
+import datetime
 
 flag = True
 while flag:
@@ -39,7 +40,7 @@ while flag:
 		cursor=db.cursor()
 		cursor.execute("update lastfm_crawlqueue set banned_tracks=1 where user_name=%s",(username))
 		closeDBConnection(cursor)
-		print username, uid
+		print username, uid, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		apiMethods.getBannedTracks(username,uid)	
 	else:
 		time.sleep(30)

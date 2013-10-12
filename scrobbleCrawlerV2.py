@@ -78,7 +78,8 @@ while crawlFlag and total >= 0:
 		# Grab a username from the crawl queue for which we have already crawled annotations (crawl_flag=1)
 		cursor = db.cursor()                        
 		offset = random.randint(0,total)
-		cursor.execute("SELECT * from lastfm_crawlqueue where crawl_flag=3 limit 1 offset %s;",(offset))
+		cursor.execute("SELECT * from lastfm_crawlqueue where crawl_flag=3 or crawl_flag=1 limit 1 offset %s;",(offset))
+		#cursor.execute("SELECT * from lastfm_crawlqueue where user_name='JaimieMurdock' and crawl_flag=3")
 		result = cursor.fetchone()
 		closeDBConnection(cursor)
 
@@ -92,8 +93,7 @@ while crawlFlag and total >= 0:
 			
 			if uid:
 				uid = uid[0]	
-				print username, uid, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-				
+				print username, uid, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")			
 				
 				# Get user's annotation count and write to extended_user_info_table
 				cursor.execute("SELECT anno_count from lastfm_extended_user_info where user_id=%s",(uid))
@@ -103,6 +103,11 @@ while crawlFlag and total >= 0:
 				# calculate tagger level, and get scrobbles if it's the next level we want to crawl
 				level = taggerLevel(annoCount)
 				print level
+
+				log = open('scrobbleLog','a')
+				log.write(','.join([str(i) for i in [username,uid,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), level]])+'\n')
+				log.close()
+
 
 				if level == 0:
 					cursor=db.cursor()

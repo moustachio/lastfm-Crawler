@@ -85,7 +85,7 @@ while True:
 			error_type = result[1]
 			desc = result[2]
 			print username, uid, error_type, desc, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-			log = open('errorLog','a')
+			log = open('errorLog2','a')
 			log.write(','.join([str(i) for i in [username, uid, error_type, desc, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]])+'\n')
 			log.close()
 			

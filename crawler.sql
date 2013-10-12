@@ -28,13 +28,24 @@ CREATE TABLE `lastfm_crawlqueue` (
 	`friends_fixed` INT(1) NOT NULL DEFAULT '1',
 	`loved_tracks` INT(1) NULL DEFAULT '0',
 	`banned_tracks` INT(1) NULL DEFAULT '0',
+	`groups` INT(1) NULL DEFAULT '0',
 	INDEX `friends_fixed` (`friends_fixed`),
-	INDEX `loved_tracks` (`loved_tracks`)
+	INDEX `loved_tracks` (`loved_tracks`),
+	INDEX `groups` (`groups`),
 	PRIMARY KEY (`user_name`),
 	INDEX `crawl_flag` (`crawl_flag`)
 )
 COLLATE='latin1_swedish_ci'
 ENGINE=InnoDB;
+
+DROP TABLE IF EXISTS `lastfm_groups`;
+CREATE TABLE `lastfm_groups` (
+  `user_id` int(10) NOT NULL DEFAULT '0',
+  `group_name` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`user_id`,`group_name`),
+  KEY `group` (`group_name`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `lastfm_scrobbles`;
 CREATE TABLE `lastfm_scrobbles` (

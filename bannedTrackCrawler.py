@@ -31,7 +31,7 @@ while flag:
 		
 
 	cursor = db.cursor()
-	cursor.execute("select user_name from lastfm_crawlqueue where (crawl_flag=1 or crawl_flag=3 or crawl_flag=4) and banned_tracks=0 limit 1;")
+	cursor.execute("select user_name from lastfm_crawlqueue where (crawl_flag=1 or crawl_flag=3 or crawl_flag=4 or crawl_flag=5) and banned_tracks=0 limit 1;")
 	result = cursor.fetchone()
 	closeDBConnection(cursor)
 	if result:
@@ -43,4 +43,5 @@ while flag:
 		print username, uid, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		apiMethods.getBannedTracks(username,uid)	
 	else:
-		time.sleep(30)
+		print 'queue exhausted'
+		sys.exit()

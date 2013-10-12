@@ -297,6 +297,22 @@ def getLovedTracks(username,uid):
 		
 	except KeyboardInterrupt:
 		raise
+
+	except ul.HTTPError, error:
+		
+		contents = error.read()
+
+		# if "Invalid user supplied" the user has likely deleted their account. record as error code 400
+		if "Invalid user supplied" in contents:
+			cursor = db.cursor()
+			cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'400'))
+		# Otherwise record as a misc. error
+		else:
+			print traceback.format_exc()
+			cursor = db.cursor()
+			cursor.callproc("UpdateErrorQueue", (uid,errorType,'','@retryCount'))
+			closeDBConnection(cursor)
+
 	
 	# catch any other errors
 	except:
@@ -336,7 +352,22 @@ def getBannedTracks(username,uid):
 		
 	except KeyboardInterrupt:
 		raise
-	
+
+	except ul.HTTPError, error:
+		
+		contents = error.read()
+
+		# if "Invalid user supplied" the user has likely deleted their account. record as error code 400
+		if "Invalid user supplied" in contents:
+			cursor = db.cursor()
+			cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'400'))
+		# Otherwise record as a misc. error
+		else:
+			print traceback.format_exc()
+			cursor = db.cursor()
+			cursor.callproc("UpdateErrorQueue", (uid,errorType,'','@retryCount'))
+			closeDBConnection(cursor)
+
 	# catch any other errors
 	except:
 		try:

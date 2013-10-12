@@ -181,7 +181,7 @@ def getUserTags(username,uid):
 					logger.error(traceback.format_exc())
 					print (username,'tagListError')
 					cursor = db.cursor()
-					# example of inconsistency in error handling. This shoudl eventually change                        
+					# example of inconsistency in error handling. This should eventually change                        
 					cursor.callproc("UpdateErrorQueue", (uid,errorType,'','@retryCount'))
 					closeDBConnection(cursor)  
 					errorRecorded = True 
@@ -221,3 +221,67 @@ def getUserAnnotations(tags,username,uid):
 			for p in range(2,lastpage+1):
 				url = 'http://www.last.fm/user/'+username+'/library/tags?tag='+t+'&view=list&page='+str(p)
 				extractAnnotations(url,uid,t,False)
+
+#Record listing of a user's groups
+def getUserGroups(username,uid):
+	errorType='groups'
+	try:
+		url = 'http://www.last.fm/user/%s/groups' % username
+		page = ul.urlopen(url).read()  
+		tree = lxml.html.document_fromstring(page)
+		
+		pages = tree.find_class('lastpage')
+		if pages:
+			nPages = int(pages[0].text_content())
+		else: 
+			nPages = 1
+		
+		for pageNumber in range(1,nPages+1):
+			if pageNumber > 1:
+				url = 'http://www.last.fm/user/%s/groups?groupspage=%s' % (username,str(pageNumber))
+				page = ul.urlopen(url).read()  
+				tree = lxml.html.document_fromstring(page)
+
+			groups = tree.find_class('groupContainer')
+			cursor = db.cursor()
+			for group in groups:
+				groupName = group.cssselect('a')[0].get('href').split('/')[2]
+				try: # need to ignore the groups with the stupid heart character... (which seem to be defunct anyway)
+					cursor.execute("INSERT IGNORE INTO lastfm_groups (user_id, group_name) VALUES (%s,%s);", (uid,groupName.lower()))
+				except UnicodeEncodeError:
+					continue
+		closeDBConnection(cursor)
+	
+	# a 404 error means we have a banned/non-existent user, so set retry count to "404" in the error queue 
+	except ul.HTTPError as e:
+		if str(e)=='HTTP Error 404: Not Found':
+			errorRecorded = False
+			while not errorRecorded:
+				try:
+					cursor = db.cursor()                        
+					cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s);", (uid,errorType,'404'))
+					closeDBConnection(cursor)
+					errorRecorded = True
+				except KeyboardInterrupt:
+					raise
+				except:
+					print traceback.format_exc()
+					print 'Retrying...'
+					continue
+
+	except KeyboardInterrupt:
+		raise
+		#closeDBConnection(cursor)
+		#cursor=db.cursor()
+		#cursor.execute("update lastfm_crawlqueue set groups=0 where user_name=%s",(username))
+		#cursor.execute("delete from lastfm_groups where user_id=%s;", (uid))
+		#closeDBConnection(cursor)
+		#print 'cleanup complete'
+		#sys.exit()
+
+	except:
+		print traceback.format_exc()
+		cursor = db.cursor()
+		cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,0))
+		closeDBConnection(cursor)
+

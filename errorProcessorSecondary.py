@@ -3,6 +3,7 @@ Error Processor. Pulls errors from the errorqueue and deals with them.
 """
 
 import apiMethods
+from urllib2 import quote
 from dbSetup import *
 from dbMethods import *
 from htmlParsingMethods import *
@@ -15,15 +16,15 @@ def cleanup(uid,error_type,desc):
 	print 'Cleaning up user ID %s' % (uid)
 	cursor = db.cursor()
 	if error_type=='annotations':
-		cursor.execute("select * from lastfm_errorqueue where user_id=%s and error_type=%s and tag_name=%s",(uid,error_type,desc))
+		cursor.execute("select * from errorqueue_updated where user_id=%s and error_type=%s and tag_name=%s",(uid,error_type,desc))
 	else:
-		cursor.execute("select * from lastfm_errorqueue where user_id=%s and error_type=%s",(uid,error_type))
+		cursor.execute("select * from errorqueue_updated where user_id=%s and error_type=%s",(uid,error_type))
 	result = cursor.fetchone()
 	if result:
 		print "Error still there...we're OK"
 	else:
 		print "Re-inserting error..."
-		cursor.execute("insert into lastfm_errorqueue (user_id,error_type,tag_name,retry_count) values (%s,%s,%s,0);",(uid,error_type,desc))
+		cursor.execute("insert into errorqueue_updated (user_id,error_type,tag_name,retry_count) values (%s,%s,%s,0);",(uid,error_type,desc))
 	closeDBConnection(cursor)
 	print 'Done!'
 
@@ -53,9 +54,10 @@ while True:
 		
 		# randomly select an error from the queue where the user is not banned/non-existent (404) or has private listening history (403)
 		cursor = db.cursor()                        
-		cursor.execute("SELECT * from lastfm_errorqueue where retry_count != 404 and retry_count != 403 and retry_count != 400 and error_type!='tags' and error_type!='annotations' order by rand() limit 1")
-		#cursor.execute("SELECT * from lastfm_errorqueue where retry_count != 404 and retry_count !=400 and retry_count != 403 and error_type!='tags' and error_type!='annotations' and (error_type in ('banned', 'loved', 'groups')) order by rand() limit 1")
-		#cursor.execute("SELECT * from lastfm_errorqueue where retry_count != 404 and retry_count != 403 and retry_count != 400 and error_type!='tags' and error_type!='annotations' and user_id=6161224 limit 1")
+		#cursor.execute("SELECT * from errorqueue_updated where retry_count != 404 and retry_count != 403 and retry_count != 400 and error_type!='tags' and error_type!='annotations' order by rand() limit 1")
+		cursor.execute("SELECT * from errorqueue_updated where retry_count !=403 order by rand() limit 1")
+		#cursor.execute("SELECT * from errorqueue_updated where retry_count != 404 and retry_count !=400 and retry_count != 403 and error_type!='tags' and error_type!='annotations' and (error_type in ('banned', 'loved', 'groups')) order by rand() limit 1")
+		#cursor.execute("SELECT * from errorqueue_updated where retry_count != 404 and retry_count != 403 and retry_count != 400 and error_type!='tags' and error_type!='annotations' and user_id=6161224 limit 1")
 		result = cursor.fetchone()
 		closeDBConnection(cursor)
 		
@@ -75,7 +77,7 @@ while True:
 						cursor.execute("insert ignore into lastfm_crawlqueue (user_name) values (%s);",(username))
 						closeDBConnection(cursor)
 					else:
-						cursor.execute("delete from lastfm_errorqueue where user_id=%s;",(uid))
+						cursor.execute("delete from errorqueue_updated where user_id=%s;",(uid))
 						closeDBConnection(cursor)
 						continue 
 				except:
@@ -90,8 +92,9 @@ while True:
 			log.close()
 			
 			# If spaces in the username caused the problem, replace them with '%20's
-			if ' ' in username:
-				new = username.replace(' ','%20')
+			### NO  - just quote it, stupid
+			new = quote(username)
+			if new != username:
 				cursor=db.cursor()
 				cursor.execute("update lastfm_userlist set user_name=%s where user_name=%s;",(new,username))
 				closeDBConnection(cursor)
@@ -103,9 +106,9 @@ while True:
 				try:
 					cursor=db.cursor()
 					if error_type=='annotations':
-						cursor.execute("DELETE from lastfm_errorqueue where user_id=%s and error_type=%s and tag_name=%s;",(uid,error_type,desc))
+						cursor.execute("DELETE from errorqueue_updated where user_id=%s and error_type=%s and tag_name=%s;",(uid,error_type,desc))
 					else:
-						cursor.execute("DELETE from lastfm_errorqueue where user_id=%s and error_type=%s;",(uid,error_type))
+						cursor.execute("DELETE from errorqueue_updated where user_id=%s and error_type=%s;",(uid,error_type))
 					closeDBConnection(cursor)
 					errorDeleted=True
 				except:

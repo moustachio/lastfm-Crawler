@@ -156,8 +156,9 @@ def getUserScrobbles(username,uid):
 		try:
 			# if user's recent tracks are private, update error queue to refelct this (403)
 			if "private" in contents:
+				print 'wtf'
 				cursor = db.cursor()
-				cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'403'))
+				cursor.execute("insert into errorqueue_updated (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'403'))
 			else:
 				print traceback.format_exc()
 				cursor = db.cursor()
@@ -216,7 +217,7 @@ def getUserScrobblesBefore(username,uid,t):
 		contents = error.read()
 		if "private" in contents:
 			cursor = db.cursor()
-			cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'403'))
+			cursor.execute("insert into errorqueue_updated (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'403'))
 			closeDBConnection(cursor)
 		else:
 			print traceback.format_exc()
@@ -305,7 +306,7 @@ def getLovedTracks(username,uid):
 		# if "Invalid user supplied" the user has likely deleted their account. record as error code 400
 		if "Invalid user supplied" in contents:
 			cursor = db.cursor()
-			cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'400'))
+			cursor.execute("insert into errorqueue_updated (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'400'))
 		# Otherwise record as a misc. error
 		else:
 			print traceback.format_exc()
@@ -360,7 +361,7 @@ def getBannedTracks(username,uid):
 		# if "Invalid user supplied" the user has likely deleted their account. record as error code 400
 		if "Invalid user supplied" in contents:
 			cursor = db.cursor()
-			cursor.execute("insert into lastfm_errorqueue (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'400'))
+			cursor.execute("insert into errorqueue_updated (user_id,error_type,retry_count) values (%s,%s,%s)",(uid,errorType,'400'))
 		# Otherwise record as a misc. error
 		else:
 			print traceback.format_exc()

@@ -56,6 +56,7 @@ while True:
 		cursor = db.cursor()                        
 		#cursor.execute("SELECT * from errorqueue_updated where retry_count != 404 and retry_count != 403 and retry_count != 400 and error_type!='tags' and error_type!='annotations' order by rand() limit 1")
 		cursor.execute("SELECT * from errorqueue_updated where retry_count !=403 order by rand() limit 1")
+		#cursor.execute("SELECT * from errorqueue_updated where user_id=22383828;")
 		#cursor.execute("SELECT * from errorqueue_updated where retry_count != 404 and retry_count !=400 and retry_count != 403 and error_type!='tags' and error_type!='annotations' and (error_type in ('banned', 'loved', 'groups')) order by rand() limit 1")
 		#cursor.execute("SELECT * from errorqueue_updated where retry_count != 404 and retry_count != 403 and retry_count != 400 and error_type!='tags' and error_type!='annotations' and user_id=6161224 limit 1")
 		result = cursor.fetchone()
@@ -86,8 +87,9 @@ while True:
 			# get descriptors for the error
 			error_type = result[1]
 			desc = result[2]
+			print desc
 			print username, uid, error_type, desc, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-			log = open('errorLog','a')
+			log = open('errorLog3','a')
 			log.write(','.join([str(i) for i in [username, uid, error_type, desc, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]])+'\n')
 			log.close()
 			
@@ -141,7 +143,7 @@ while True:
 		# if the queue is empty, wait for ten seconds before checking again
 		else:
 			print 'queue exhausted...waiting'
-			time.sleep(60)
+	
 
 			sys.exit()
 			#time.sleep(10)
